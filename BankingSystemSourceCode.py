@@ -26,7 +26,7 @@ def validatePassword(password): #para naay twist and password para ers erss
 
 def register(): #create acc niiiiii
     
-    firstName = input("Enter first name: ").strip()
+    firstName = entry_first.get().strip()
     lastName = input("Enter last name: ").strip()
        
 
