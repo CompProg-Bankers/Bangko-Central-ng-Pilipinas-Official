@@ -56,6 +56,8 @@ def register(): #create acc niiiiii
     print(f"Registration successful. Welcome, {firstName} {lastName}!")
 
 
+
+
 # LOG IN =======================================================================
 def logIn():
     firstName = input("Enter your first name: ").strip().title()
@@ -73,6 +75,15 @@ def logIn():
     print("Invalid credentials. Try Again.")
     return False
 
+## SIGN OUT --------
+def signOut():
+    global is_logged_in
+
+    if is_logged_in == True:
+        is_logged_in = False
+        print("\nYou have successfully signed out.")
+    else:
+        print("\nNo user is currently logged in.")
 
 #DEPOSIT MONEY
 def depositMoney():
@@ -82,6 +93,11 @@ def depositMoney():
     print(f"Deposit: {amount} on ({date})")
 
 
-
-
+#CHECK BALANCE
+def check_balance():
+    Name = float(input("Enter Account Name to verify: "))
+    with open("bank.txt","a")as file:
+        file.write(f"Check balance: {Name} on ({date}) \n")
+    print(f"Check balance: {Name} on ({date})")
+    
 
