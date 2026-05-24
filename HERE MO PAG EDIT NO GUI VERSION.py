@@ -101,3 +101,41 @@ def check_balance():
     print(f"Check balance: {Name} on ({date})")
     
 
+# WITHDRAWAL RECORDS 
+def withdrawalRecords():
+    try:
+        with open("bank.txt", "r") as file:
+            found = False
+
+            print("\nWITHDRAWAL RECORDS - ")
+
+            for line in file:
+                if "Withdraw" in line:
+                    print(line.strip())
+                    found = True
+
+            if not found:
+                print("No withdrawal records found.")
+
+    except FileNotFoundError:
+        print("No withdrawal records found.")
+
+
+# DISPLAY TRANSACTION HISTORY
+def displayTransactionHistory():
+    try:
+        with open("bank.txt", "r") as file:
+            records = file.readlines()
+
+            if not records:
+                print("No transaction history found.")
+                return
+
+            print("\nTRANSACTION HISTORY - ")
+
+            for record in records:
+                print(record.strip())
+
+    except FileNotFoundError:
+        print("No transaction history found.")
+
