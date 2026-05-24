@@ -26,8 +26,10 @@ def validatePassword(password): #para naay twist and password para ers erss
 
 def register(): #create acc niiiiii
     
-    firstName = entry_first.get().strip()
-    lastName = input("Enter last name: ").strip()
+    firstName = input("Enter your first name: ").strip()
+    lastName = input("Enter your last name: ").strip()
+    passWord = input("Enter your password: ").strip()
+
        
 
     # check if NA REGISTER NA
@@ -43,10 +45,11 @@ def register(): #create acc niiiiii
         pass
 
     while True:
-        password = input("Enter password (8+ chars, 1 uppercase, 1 special char): ")
+        print("Password must be at least 8 characters long, contain at least one uppercase letter, and one special character.")
+        password = input("Enter your password: ").strip()
         if validatePassword(password):
             break
-        print("Invalid password. Try Again")
+        print("Invalid password. Try Again.")
 
     with open("Banker.txt", "a") as file:
         file.write(f"{firstName},{lastName},{password}\n")
@@ -55,9 +58,9 @@ def register(): #create acc niiiiii
 
 # LOG IN =======================================================================
 def logIn():
-    firstName = input("Enter first name: ").strip().title()
-    lastName = input("Enter last name: ").strip().title()
-    password = input("Enter your password: ")
+    firstName = input("Enter your first name: ").strip().title()
+    lastName = input("Enter your last name: ").strip().title()
+    password = input("Enter your password: ").strip()
 
     with open("Banker.txt", "r") as file:
         for line in file:
@@ -73,10 +76,12 @@ def logIn():
 
 #DEPOSIT MONEY
 def depositMoney():
-    amount = float(input("Enter amount:    "))
+    amount = float(input("Enter the amount to deposit: "))
     with open("bank.txt", "a") as file:
         file.write(f"Deposit: {amount} on ({date})\n")
     print(f"Deposit: {amount} on ({date})")
+
+
 
 
 
