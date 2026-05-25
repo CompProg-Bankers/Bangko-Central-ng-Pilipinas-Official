@@ -139,3 +139,37 @@ def displayTransactionHistory():
     except FileNotFoundError:
         print("No transaction history found.")
 
+# =========================
+# DELETE ACCOUNT FUNCTION
+# =========================
+def deleteAccount():
+    acc_num = input("Enter Account Number to delete: ")
+
+    found = False
+    updated_accounts = []
+
+    try:
+        with open("accounts.txt", "r") as file:
+            lines = file.readlines()
+
+            for line in lines:
+                data = line.strip().split(",")
+
+                account_number = data[0]
+
+                if account_number == acc_num:
+                    found = True
+                    print("Account deleted successfully!")
+
+                else:
+                    updated_accounts.append(line)
+
+        if found:
+            with open("accounts.txt", "w") as file:
+                file.writelines(updated_accounts)
+
+        else:
+            print("Account not found!")
+
+    except FileNotFoundError:
+        print("No account records found!")
