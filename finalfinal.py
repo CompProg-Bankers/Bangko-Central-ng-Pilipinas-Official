@@ -12,6 +12,7 @@ try:
     open(userFile, "x").close()
 except FileExistsError:
     pass
+
 try:
     open(tranSactions, "x").close()
 except FileExistsError:
@@ -36,6 +37,7 @@ def valPass(password):
         return "Password must have atleast one number."
     return None
 
+# GET BALANCE =======================================================================
 def getBal():
     first = currentUser["first"]
     last = currentUser["last"]
@@ -43,7 +45,7 @@ def getBal():
 
     try: 
         with open(userFile, "r") as file:
-            for line in file:
+            for line in file: 
                 parts = line.strip().split(",")
                 if len(parts) >= 4 and parts[0] == first and parts[1] == last:
                     tx_type = parts[2]
@@ -56,7 +58,7 @@ def getBal():
         pass
     return balance
 
-def save(tx_type, amount):
+def saveTransac(tx_type, amount):
     with open(tranSactions, "a") as file: 
         file.write(f"{currentUser['first']},{currentUser['last']},: {tx_type},{amount},{now()}\n")
 
@@ -103,6 +105,7 @@ def register(): #create acc niiiiii
         if valPass(password):
             break
         messagebox.showerror("Error", "Invalid password. Try Again.")
+        
 
     with open("Banker.txt", "a") as file:
         file.write(f"{firstName},{lastName},{password}\n")
@@ -129,7 +132,7 @@ def logIn():
         with open(userFile, "r") as file:
             for line in file:
                 parts = line.strip().split(",")
-                if len(parts) >= 3 and parts[0] == firstName and parts [1] == last and parts[2] == password:
+                if len(parts) >= 3 and parts[0] == firstName and parts [1] == last and parts[2] == password::
                     currentUser["first"] = firstName
                     currentUser["last"] = lastName
                     entry_login_first.delete(0, tk.END)
@@ -154,13 +157,48 @@ def logOut():
 # DASHBOARD OPEN =========================
 def openDashboard():
     lbl_welcome.config(text=f"Welcome, {currentUser['first']} {currentUser['last']}!")
-    refresh_balance()
+    refreshBal()
     show_frame(frame_dashboard)
 
 def refreshBal():
     bal = getBal()
     lbl_balance.config(text=f"Balance: ₱{bal:.2f}")
 
+# DEPOSIT =======================================================================
+def deposit():
+    amount_str = entry_deposit.get().strip()
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Error", "Please enter a valid positive number.")
+        return
+
+    saveTransac("deposit", amount)
+    entry_deposit.delete(0, tk.END)
+    messagebox.showinfo("Success", f"Deposited ₱{amount:.2f} successfully.")
+    refreshBal()
+
+# WITHDRAW =======================================================================
+def withdrawal():
+    amount = entry_withdraw.get().strip()
+    try:
+        with open("bank.txt", "r") as file:
+            found = False
+
+            print("\nWITHDRAWAL RECORDS - ")
+
+            for line in file:
+                if "Withdraw" in line:
+                    print(line.strip())
+                    found = True
+
+            if not found:
+                print("No withdrawal records found.")
+
+    except FileNotFoundError:
+        print("No withdrawal records found.")
 
 
 
