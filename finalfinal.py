@@ -181,13 +181,13 @@ def deposit():
     refreshBal()
 
 # WITHDRAW =======================================================================
-def withdrawal():
+def withdrawalRecord():
     amount = entry_withdraw.get().strip()
     try:
         with open("bank.txt", "r") as file:
             found = False
 
-            print("\nWITHDRAWAL RECORDS - ")
+            print("\nWITHDRAWAL Records - ")
 
             for line in file:
                 if "Withdraw" in line:
