@@ -180,14 +180,14 @@ def deposit():
     messagebox.showinfo("Success", f"Deposited ₱{amount:.2f} successfully.")
     refreshBal()
 
-# WITHDRAW =======================================================================
-def withdrawal():
+# WITHDRAWAL RECORD =======================================================================
+def withdrawalRecord():
     amount = entry_withdraw.get().strip()
     try:
         with open("bank.txt", "r") as file:
             found = False
 
-            print("\nWITHDRAWAL RECORDS - ")
+            print("\nWITHDRAWAL Records - ")
 
             for line in file:
                 if "Withdraw" in line:
@@ -199,6 +199,27 @@ def withdrawal():
 
     except FileNotFoundError:
         print("No withdrawal records found.")
+
+# Withdraw Money========================================================================
+def withdraw():
+    amount_str = entry_withdraw.get().strip()
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Error", "Please enter a valid positive number.")
+        return
+
+    current_balance = getBal()
+    if amount > current_balance:
+        messagebox.showerror("Error", "Insufficient funds.")
+        return
+
+    saveTransac("withdrawal", amount)
+    entry_withdraw.delete(0, tk.END)
+    messagebox.showinfo("Success", f"Withdrew ₱{amount:.2f} successfully.")
+    refreshBal()
 
 
 
