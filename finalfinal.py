@@ -255,6 +255,27 @@ def displayTransactionHistory():
     except FileNotFoundError:
         messagebox.showinfo("Transaction History", "No transaction history found.")
 
+# DELETE ACCOUNT =======================================================================
+def deleteAccount():
+    if messagebox.askyesno("Confirm", "Are you sure you want to delete your account? This action cannot be undone."):
+        try:
+            with open(userFile, "r") as file:
+                lines = file.readlines()
+            with open(userFile, "w") as file:
+                for line in lines:
+                    parts = line.strip().split(",")
+                    if len(parts) >= 3 and not (parts[0] == currentUser["first"] and parts[1] == currentUser["last"]):
+                        file.write(line)
+            logOut()
+            messagebox.showinfo("Account Deleted", "Your account has been deleted.")
+        except FileNotFoundError:
+            messagebox.showerror("Error", "An error occurred while trying to delete your account.")
+
+#SIGN OUT =======================================================================
+def signOut():
+    if messagebox.askyesno("Confirm", "Are you sure you want to sign out?"):
+        logOut()
+
 
 # START OF GUI  HERE =======================================
 # ROOT WINDOW ================================================
