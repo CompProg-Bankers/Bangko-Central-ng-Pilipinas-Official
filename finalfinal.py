@@ -157,13 +157,48 @@ def logOut():
 # DASHBOARD OPEN =========================
 def openDashboard():
     lbl_welcome.config(text=f"Welcome, {currentUser['first']} {currentUser['last']}!")
-    refresh_balance()
+    refreshBal()
     show_frame(frame_dashboard)
 
 def refreshBal():
     bal = getBal()
     lbl_balance.config(text=f"Balance: ₱{bal:.2f}")
 
+# DEPOSIT =======================================================================
+def deposit():
+    amount_str = entry_deposit.get().strip()
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Error", "Please enter a valid positive number.")
+        return
+
+    saveTransac("deposit", amount)
+    entry_deposit.delete(0, tk.END)
+    messagebox.showinfo("Success", f"Deposited ₱{amount:.2f} successfully.")
+    refreshBal()
+
+# WITHDRAW =======================================================================
+def withdrawal():
+    amount = entry_withdraw.get().strip()
+    try:
+        with open("bank.txt", "r") as file:
+            found = False
+
+            print("\nWITHDRAWAL RECORDS - ")
+
+            for line in file:
+                if "Withdraw" in line:
+                    print(line.strip())
+                    found = True
+
+            if not found:
+                print("No withdrawal records found.")
+
+    except FileNotFoundError:
+        print("No withdrawal records found.")
 
 
 
