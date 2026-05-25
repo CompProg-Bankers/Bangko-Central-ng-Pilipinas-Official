@@ -139,3 +139,9 @@ def displayTransactionHistory():
     except FileNotFoundError:
         print("No transaction history found.")
 
+#withdrawal
+def withdrawMoney():
+    amount = float(input("Enter the amount to withdraw: "))
+    with open("bank.txt", "a") as file:
+        file.write(f"Withdraw: {amount} on ({date})\n")
+    print(f"Withdraw: {amount} on ({date})")
