@@ -49,11 +49,14 @@ def getBal():
                 parts = line.strip().split(",")
                 if len(parts) >= 4 and parts[0] == first and parts[1] == last:
                     tx_type = parts[2]
-                    amount = float(parts[3])
-                    if tx_type == "deposit":
-                        balance += amount
-                    elif tx_type == "withdrawal":
-                        balance -= amount
+                    try:
+                        amount = float(parts[3])
+                        if tx_type == "deposit":
+                            balance += amount
+                        elif tx_type == "withdrawal":
+                            balance -= amount
+                    except ValueError:
+                        continue
     except FileNotFoundError:
         pass
     return balance
@@ -182,23 +185,25 @@ def deposit():
 
 # WITHDRAWAL RECORD =======================================================================
 def withdrawalRecord():
-    amount = entry_withdraw.get().strip()
     try:
-        with open("bank.txt", "r") as file:
-            found = False
+        with open(userFile, "r") as file:
+            records = file.readlines()
 
-            print("\nWITHDRAWAL Records - ")
+            history = ""
+            for record in records:
+                parts = record.strip().split(",")
+                if parts[0] == currentUser["first"] and parts[1] == currentUser["last"]:
+                    if parts[2].lower() == "withdrawal":
+                        history += f"Withdrawal - ₱{float(parts[3]):.2f}\n"
 
-            for line in file:
-                if "Withdraw" in line:
-                    print(line.strip())
-                    found = True
+            if not history:
+                messagebox.showinfo("Withdrawal Records", "No withdrawal records found.")
+                return
 
-            if not found:
-                print("No withdrawal records found.")
+            messagebox.showinfo("Withdrawal Records", history)
 
     except FileNotFoundError:
-        print("No withdrawal records found.")
+        messagebox.showinfo("Withdrawal Records", "No withdrawal records found.")
 
 # Withdraw Money========================================================================
 def withdraw():
@@ -215,15 +220,40 @@ def withdraw():
     if amount > current_balance:
         messagebox.showerror("Error", "Insufficient funds.")
         return
+    
+    if messagebox.askyesno("Confirm", f"Withdraw ₱{amount:.2f}?"):
+        saveTransac("withdrawal", amount)
+        entry_withdraw.delete(0, tk.END)
+        messagebox.showinfo("Success", f"Withdrew ₱{amount:.2f} successfully.")
+        refreshBal()
 
-    saveTransac("withdrawal", amount)
-    entry_withdraw.delete(0, tk.END)
-    messagebox.showinfo("Success", f"Withdrew ₱{amount:.2f} successfully.")
-    refreshBal()
+#DISPLAY TRANSACTION HISTORY =======================================================================
+def displayTransactionHistory():
+    try:
+        with open(userFile, "r") as file:
+            records = file.readlines()
+            if not records:
+                messagebox.showinfo("Transaction History", "No transaction history found.")
+                return
 
+            history = ""
+            for record in records:
+                parts = record.strip().split(",")
+                if parts[0] == currentUser["first"] and parts[1] == currentUser["last"]:
+                    history += f"{parts[2].capitalize()} - ₱{float(parts[3]):.2f}\n"
+            if not history:
+                messagebox.showinfo("Transaction History", "No transaction history found.")
+                return
 
+            win = tk.Toplevel()  #using this because the transactiob history might be too long for a messagebox
+            win.title("Transaction History")
+            text = tk.Text(win, width=40, height=15)
+            text.insert(tk.END, history)
+            text.config(state="disabled")
+            text.pack(padx=10, pady=10)
 
-
+    except FileNotFoundError:
+        messagebox.showinfo("Transaction History", "No transaction history found.")
 
 
 # START OF GUI  HERE =======================================
