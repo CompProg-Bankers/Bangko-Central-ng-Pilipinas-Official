@@ -49,11 +49,14 @@ def getBal():
                 parts = line.strip().split(",")
                 if len(parts) >= 4 and parts[0] == first and parts[1] == last:
                     tx_type = parts[2]
-                    amount = float(parts[3])
-                    if tx_type == "deposit":
-                        balance += amount
-                    elif tx_type == "withdrawal":
-                        balance -= amount
+                    try:
+                        amount = float(parts[3])
+                        if tx_type == "deposit":
+                            balance += amount
+                        elif tx_type == "withdrawal":
+                            balance -= amount
+                    except ValueError:
+                        continue
     except FileNotFoundError:
         pass
     return balance
@@ -182,23 +185,26 @@ def deposit():
 
 # WITHDRAWAL RECORD =======================================================================
 def withdrawalRecord():
-    amount = entry_withdrawrec.get().strip()
+    amount = entry_withdraw.get().strip()
     try:
-        with open("bank.txt", "r") as file:
-            found = False
+        with open(userFile, "r") as file:
+            records = file.readlines()
 
-            print("\nWITHDRAWAL Records - ")
+            history = ""
+            for record in records:
+                parts = record.strip().split(",")
+                if parts[0] == currentUser["first"] and parts[1] == currentUser["last"]:
+                    if parts[2].lower() == "withdrawal":
+                        history += f"Withdrawal - ₱{float(parts[3]):.2f}\n"
 
-            for line in file:
-                if "Withdraw" in line:
-                    print(line.strip())
-                    found = True
+            if not history:
+                messagebox.showinfo("Withdrawal Records", "No withdrawal records found.")
+                return
 
-            if not found:
-                print("No withdrawal records found.")
+            messagebox.showinfo("Withdrawal Records", history)
 
     except FileNotFoundError:
-        print("No withdrawal records found.")
+        messagebox.showinfo("Withdrawal Records", "No withdrawal records found.")
 
 # Withdraw Money========================================================================
 def withdraw():
@@ -215,14 +221,130 @@ def withdraw():
     if amount > current_balance:
         messagebox.showerror("Error", "Insufficient funds.")
         return
+    
+    if messagebox.askyesno("Confirm", f"Withdraw ₱{amount:.2f}?"):
+        saveTransac("withdrawal", amount)
+        entry_withdraw.delete(0, tk.END)
+        messagebox.showinfo("Success", f"Withdrew ₱{amount:.2f} successfully.")
+        refreshBal()
 
-    saveTransac("withdrawal", amount)
-    entry_withdraw.delete(0, tk.END)
-    messagebox.showinfo("Success", f"Withdrew ₱{amount:.2f} successfully.")
-    refreshBal()
 
 
 
 
+
+# START OF GUI  HERE =======================================
+# ROOT WINDOW ================================================
+root = tk.Tk()
+root.title("BANGKO CENTRAL \nNG USTP", font="Palatino Linotype", bg="#f3e6bd", fg="#640d14").pack(pady=(30,4))
+root.geometry("400x480")
+root.config(bg="#f3e6bd")
+root.resizable(False, False)
+
+container = tk.Frame(root, bg="#f3e6bd")
+container.pack(fill="both", expand=True)
+container.grid_rowconfigure(0, weight=1)
+container.grid_columnconfigure(0, weight=1)
+
+#FOR GUI REFERENCES AND FRAME  ======================================================
+
+frame_login = tk.Frame(container, bg="#f3e6bd")
+frame_register = tk.Frame(container, bg="#f3e6bd")
+frame_dashboard = tk.Frame(container, bg="#f3e6bd")
+
+for frame in (frame_login, frame_register, frame_dashboard):
+    frame.grid(row=0, column=0, sticky="nsew")
+FONT_TITLE = ("Palatino Linotype", 16, "bold")
+FONT_LABEL = ("Palatino Linotype", 10)
+FONT_ENTRY = ("Palatino Linotype", 11)
+FONT_BTN   = ("Palatino Linotype", 10, "bold")
+FONT_INPUT = ("Palatino Linotype", 10)
+
+BG = "#f3e6bd"
+GOLD = "#d89783"
+cottonCandy = "#fd9bb7"
+brownRed = "#ad2831"
+blackCherry = "#640d14"
+
+
+
+# REGISTER GUI ==========================================
+
+tk.Label(frame_register, text="OPEN ACCOUNT", fot=FONT_TITLE, bg=BG, fg=blackCherry).pack(pady=(30, 4))
+tk.Label(frame_register, text="BANGKO CENTRAL NG PILIPINAS", font=("Georgia", 8), bg=BG, fg=GOLD).pack()
+tk.Frame(frame_register, height=1, bg=BG).pack(fill="x", padx=30, pady=14)
+
+tk.Label(frame_register, text="First Name", font=FONT_LABEL, bg=BG).pack(panchor="w", padx=40)
+entry_reg_first= tk.Entry(frame_register, font=FONT_ENTRY, bg=GOLD, relief="flat", bd=4) 
+entry_reg_first.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_register, text="Last Name", font=FONT_LABEL, bg=BG).pack(panchor="w", padx=40)
+entry_reg_last = tk.Entry(frame_register, font=FONT_ENTRY, bg=GOLD, relief="flat", bd=4)
+entry_reg_last.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_register, text="Password", font=FONT_LABEL, bg=BG).pack(anchor="w",padx=40)
+pass_frame_reg = tk.Frame(frame_register, bg=BG)
+pass_frame_reg.pack(fill="x", padx=40, pady=(2, 16))
+entry_reg_pass = tk.Entry(pass_frame_reg, font=FONT_ENTRY, bg=GOLD, relief="flat", bd=4, show="*")
+entry_reg_pass.pack(side="left", fill="x", expand=True)
+tk.Button(pass_frame_reg, text="Show", font=("Palatino Linotype", 8), bg=BG, bd=0,
+          command=lambda: togglePass(entry_reg_pass, btn_toggle_reg)).pack(side="left", padx=4)
+btn_toggle_reg = pass_frame_reg.winfo_children()[-1]
+
+tk.Button(frame_register, text="Register", font=FONT_BTN, bg=blackCherry, fg=BG, relief="flat", padx=10, pady=8, command=register).pack(fill="x", padx=40, pady=(0, 8))
+tk.Button(frame_register, text="Back to Login", font=FONT_BTN, bg=blackCherry, fg=BG, relief="flat", padx=10, pady=8, command=lambda: show_frame(frame_login)).pack(fill="x", padx=40)
+
+
+#LOGIN ====================================================
+tk.Label(frame_register, text="Digital Banking Portal", fot=FONT_TITLE, bg=BG, fg=blackCherry).pack(pady=(30, 4))
+tk.Label(frame_register, text="BANGKO CENTRAL NG USTP", font=("Georgia", 8), bg=BG, fg=GOLD).pack()
+tk.Frame(frame_register, height=1, bg=BG).pack(fill="x", padx=30, pady=14)
+
+tk.Label(frame_register, text="First Name", font=FONT_LABEL, bg=BG).pack(panchor="w", padx=40)
+entry_login_first= tk.Entry(frame_register, font=FONT_ENTRY, bg=GOLD, relief="flat", bd=4) 
+entry_login_first.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_register, text="Last Name", font=FONT_LABEL, bg=BG).pack(panchor="w", padx=40)
+entry_login_last = tk.Entry(frame_register, font=FONT_ENTRY, bg=GOLD, relief="flat", bd=4)
+entry_login_last.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_login, text="Password", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+pass_frame_login = tk.Frame(frame_login, bg=BG)
+pass_frame_login.pack(fill="x", padx=40, pady=(2, 16))
+entry_login_pass = tk.Entry(pass_frame_login, font=FONT_ENTRY, bg=GOLD, relief="flat", bd=4, show="*")
+entry_login_pass.pack(side="left", fill="x", expand=True)
+tk.Button(pass_frame_login, text="Show", font=("Georgia", 8), bg=BG, bd=0,
+          command=lambda: togglePass(entry_login_pass, btn_toggle_login)).pack(side="left", padx=4)
+btn_toggle_login = pass_frame_login.winfo_children()[-1]
+
+tk.Button(frame_login, text="Log In", font=FONT_BTN, bg=blackCherry, fg="white", relief="flat",
+          padx=10, pady=8, command=logIn).pack(fill="x", padx=40, pady=(0, 8))
+tk.Button(frame_login, text="Create Account", font=FONT_BTN, bg=GOLD, fg=blackCherry, relief="flat",
+          padx=10, pady=8, command=lambda: show_frame(frame_register)).pack(fill="x", padx=40)
+
+# DASHBOARD FOR ACCOUNTS ====================================
+dash_top = tk.Frame(frame_dashboard, bg= blackCherry)
+dash_top.pack(fill="x")
+
+lbl_welcome = tk.Label(dash_top, text = f"Welcome, {currentUser['first']} {currentUser['last']}!", font=FONT_TITLE, bg=blackCherry, fg=BG)
+lbl_welcome.pack(side = "left", padx=20, pady=16)
+
+tk.Button(dash_top, text="Log Out", font=FONT_BTN, bg=blackCherry, fg=BG, relief="flat", padx=10, pady=8, command=logOut).pack(side="right", padx=20)
+lbl_balance = 
+
+
+
+
+
+
+
+
+
+
+
+
+
+show_frame(frame_login)
+root.mainloop()
 
 
