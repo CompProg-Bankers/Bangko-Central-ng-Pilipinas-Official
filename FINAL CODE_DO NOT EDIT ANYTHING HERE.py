@@ -1,283 +1,417 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
+import getpass
 
-now = datetime.now()
-date = now.strftime("%Y-%m-%d %H:%M:%S")
+# ── FILES ──────────────────────────────────────────────────────────────
+USERS_FILE = "Banker.txt"
+TRANSACTIONS_FILE = "Transactions.txt"
 
-# CREATE FILE
 try:
-    with open("Banker.txt", "x") as file:
-        print("File created successfully.")
+    open(USERS_FILE, "x").close()
 except FileExistsError:
-    print("File already exists.")
+    pass
 
-# COLORS & FONT
-BG = "#fbf4eb"
-ENTRY_BG = "#fbd9eb"
-FG = "#c43670"
-FONT = ("Courier New", 9)
-FONT_TITLE = ("Courier New", 13, "bold")
+try:
+    open(TRANSACTIONS_FILE, "x").close()
+except FileExistsError:
+    pass
 
-# SHARED STATE
-logged_in_user = {"first": "", "last": ""}
+# ── GLOBALS ────────────────────────────────────────────────────────────
+current_user = {"first": "", "last": ""}
 
 
-# VALIDATE PASSWORD
-def validatePassword(password):
+# ── UTILS ──────────────────────────────────────────────────────────────
+def now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def validate_password(password):
     if len(password) < 8:
-        return False
+        return "Password must be at least 8 characters."
     if not any(c.isupper() for c in password):
-        return False
+        return "Password must have at least 1 uppercase letter."
     if not any(not c.isalnum() for c in password):
-        return False
-    return True
+        return "Password must have at least 1 special character."
+    return None
 
 
-# ==================== WINDOW 1: LOGIN / REGISTER ====================
-
-def open_window1():
-    win1 = tk.Tk()
-    win1.title("Bangko Central ng Pilipinas")
-    win1.geometry("420x340")
-    win1.config(bg=BG)
-    win1.resizable(False, False)
-
-    tk.Label(win1, text="Bangko Central ng Pilipinas", font=FONT_TITLE, bg=BG, fg=FG).pack(pady=(18, 4))
-    tk.Label(win1, text="─" * 44, bg=BG, fg="#e0b0c8", font=("Courier New", 8)).pack()
-
-    # entries
-    tk.Label(win1, text="First Name", font=FONT, bg=BG).pack(pady=(12, 1))
-    e_first = tk.Entry(win1, bg=ENTRY_BG, fg=FG, font=FONT, width=28)
-    e_first.pack()
-
-    tk.Label(win1, text="Last Name", font=FONT, bg=BG).pack(pady=(6, 1))
-    e_last = tk.Entry(win1, bg=ENTRY_BG, fg=FG, font=FONT, width=28)
-    e_last.pack()
-
-    tk.Label(win1, text="Password", font=FONT, bg=BG).pack(pady=(6, 1))
-    e_pass = tk.Entry(win1, bg=ENTRY_BG, fg=FG, font=FONT, width=28, show="*")
-    e_pass.pack()
-
-    def togglePass():
-        e_pass.config(show="" if e_pass.cget("show") == "*" else "*")
-
-    tk.Button(win1, text="Show / Hide Password", command=togglePass,
-              bg=ENTRY_BG, fg=FG, font=("Courier New", 7), relief="flat", cursor="hand2").pack(pady=(3, 0))
-
-    tk.Label(win1, text="Password: 8+ chars, 1 uppercase, 1 special character",
-             font=("Courier New", 6), bg=BG, fg="#999").pack()
-
-    # REGISTER
-    def do_register():
-        first = e_first.get().strip().title()
-        last = e_last.get().strip().title()
-        password = e_pass.get()
-
-        if not first or not last or not password:
-            messagebox.showerror("Error", "Please fill in all fields.", parent=win1)
-            return
-
-        try:
-            with open("Banker.txt", "r") as f:
-                for line in f:
-                    parts = line.strip().split(",")
-                    if len(parts) >= 2 and parts[0] == first and parts[1] == last:
-                        messagebox.showerror("Error", "Account already exists. Please log in.", parent=win1)
-                        return
-        except FileNotFoundError:
-            pass
-
-        if not validatePassword(password):
-            messagebox.showerror("Error", "Invalid password. Must be 8+ chars, 1 uppercase, 1 special character.", parent=win1)
-            return
-
-        with open("Banker.txt", "a") as f:
-            f.write(f"{first},{last},{password},0\n")  # balance starts at 0
-
-        messagebox.showinfo("Success", f"Registered successfully! Welcome, {first} {last}!", parent=win1)
-
-    # LOGIN → goes to Window 2
-    def do_login():
-        first = e_first.get().strip().title()
-        last = e_last.get().strip().title()
-        password = e_pass.get()
-
-        if not first or not last or not password:
-            messagebox.showerror("Error", "Please fill in all fields.", parent=win1)
-            return
-
-        try:
-            with open("Banker.txt", "r") as f:
-                for line in f:
-                    parts = line.strip().split(",")
-                    if len(parts) >= 3 and parts[0] == first and parts[1] == last and parts[2] == password:
-                        logged_in_user["first"] = first
-                        logged_in_user["last"] = last
-                        messagebox.showinfo("Success", f"Welcome back, {first} {last}!", parent=win1)
-                        win1.destroy()
-                        open_window2()
-                        return
-        except FileNotFoundError:
-            pass
-
-        messagebox.showerror("Error", "Invalid credentials. Try again.", parent=win1)
-
-    btn_frame = tk.Frame(win1, bg=BG)
-    btn_frame.pack(pady=10)
-    tk.Button(btn_frame, text="  Log In  ", command=do_login,
-              bg=FG, fg="white", font=FONT, relief="flat", cursor="hand2", padx=6).grid(row=0, column=0, padx=6)
-    tk.Button(btn_frame, text="  Register  ", command=do_register,
-              bg=ENTRY_BG, fg=FG, font=FONT, relief="flat", cursor="hand2", padx=6).grid(row=0, column=1, padx=6)
-
-    win1.mainloop()
-
-
-# ==================== WINDOW 2: DETAILS ====================
-
-def open_window2():
-    win2 = tk.Tk()
-    win2.title("Account Details")
-    win2.geometry("420x300")
-    win2.config(bg=BG)
-    win2.resizable(False, False)
-
-    first = logged_in_user["first"]
-    last = logged_in_user["last"]
-
-    tk.Label(win2, text="Account Details", font=FONT_TITLE, bg=BG, fg=FG).pack(pady=(18, 4))
-    tk.Label(win2, text="─" * 44, bg=BG, fg="#e0b0c8", font=("Courier New", 8)).pack()
-
-    info_frame = tk.Frame(win2, bg=BG)
-    info_frame.pack(pady=14)
-
-    def row(label, value):
-        tk.Label(info_frame, text=f"{label:<14}", font=FONT, bg=BG, fg="#888", anchor="w").grid(
-            row=row.n, column=0, sticky="w", padx=(20, 6), pady=3)
-        tk.Label(info_frame, text=value, font=("Courier New", 9, "bold"), bg=BG, fg=FG, anchor="w").grid(
-            row=row.n, column=1, sticky="w", pady=3)
-        row.n += 1
-    row.n = 0
-
-    row("First Name :", first)
-    row("Last Name  :", last)
-
-    # Read balance from file
-    balance = "0.00"
+def get_balance():
+    first = current_user["first"]
+    last = current_user["last"]
+    balance = 0.0
     try:
-        with open("Banker.txt", "r") as f:
+        with open(TRANSACTIONS_FILE, "r") as f:
             for line in f:
                 parts = line.strip().split(",")
-                if len(parts) >= 4 and parts[0] == first and parts[1] == last:
-                    balance = parts[3]
+                if len(parts) == 4 and parts[0] == first and parts[1] == last:
+                    tx_type = parts[2]
+                    amount = float(parts[3])
+                    if tx_type == "deposit":
+                        balance += amount
+                    elif tx_type == "withdrawal":
+                        balance -= amount
     except FileNotFoundError:
         pass
-
-    row("Balance    :", f"₱ {float(balance):,.2f}")
-
-    def go_deposit():
-        win2.destroy()
-        open_window3()
-
-    def go_logout():
-        win2.destroy()
-        open_window1()
-
-    btn_frame = tk.Frame(win2, bg=BG)
-    btn_frame.pack(pady=14)
-    tk.Button(btn_frame, text="  Deposit  ", command=go_deposit,
-              bg=FG, fg="white", font=FONT, relief="flat", cursor="hand2", padx=6).grid(row=0, column=0, padx=6)
-    tk.Button(btn_frame, text="  Log Out  ", command=go_logout,
-              bg=ENTRY_BG, fg=FG, font=FONT, relief="flat", cursor="hand2", padx=6).grid(row=0, column=1, padx=6)
-
-    win2.mainloop()
+    return balance
 
 
-# ==================== WINDOW 3: DEPOSIT ====================
+def save_transaction(tx_type, amount):
+    with open(TRANSACTIONS_FILE, "a") as f:
+        f.write(f"{current_user['first']},{current_user['last']},{tx_type},{amount},{now()}\n")
 
-def open_window3():
-    win3 = tk.Tk()
-    win3.title("Deposit")
-    win3.geometry("420x320")
-    win3.config(bg=BG)
-    win3.resizable(False, False)
 
-    first = logged_in_user["first"]
-    last = logged_in_user["last"]
+def toggle_password(entry, btn):
+    if entry.cget("show") == "*":
+        entry.config(show="")
+        btn.config(text="Hide")
+    else:
+        entry.config(show="*")
+        btn.config(text="Show")
 
-    tk.Label(win3, text="Deposit Money", font=FONT_TITLE, bg=BG, fg=FG).pack(pady=(18, 4))
-    tk.Label(win3, text="─" * 44, bg=BG, fg="#e0b0c8", font=("Courier New", 8)).pack()
 
-    # Read current balance
-    lines = []
-    current_balance = 0.0
-    user_line_index = -1
+def show_frame(frame):
+    frame.tkraise()
+
+
+# ── REGISTER ───────────────────────────────────────────────────────────
+def register():
+    first = entry_reg_first.get().strip()
+    last = entry_reg_last.get().strip()
+    password = entry_reg_pass.get()
+
+    if not first or not last or not password:
+        messagebox.showerror("Error", "All fields are required.")
+        return
+
+    err = validate_password(password)
+    if err:
+        messagebox.showerror("Invalid Password", err)
+        return
 
     try:
-        with open("Banker.txt", "r") as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            parts = line.strip().split(",")
-            if len(parts) >= 4 and parts[0] == first and parts[1] == last:
-                current_balance = float(parts[3])
-                user_line_index = i
+        with open(USERS_FILE, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) >= 2 and parts[0] == first and parts[1] == last:
+                    messagebox.showinfo("Info", "Account already exists. Please log in.")
+                    return
     except FileNotFoundError:
         pass
 
-    bal_var = tk.StringVar(value=f"₱ {current_balance:,.2f}")
-    tk.Label(win3, text="Current Balance", font=FONT, bg=BG, fg="#888").pack(pady=(12, 0))
-    tk.Label(win3, textvariable=bal_var, font=("Courier New", 14, "bold"), bg=BG, fg=FG).pack()
+    with open(USERS_FILE, "a") as f:
+        f.write(f"{first},{last},{password}\n")
 
-    tk.Label(win3, text="Amount to Deposit", font=FONT, bg=BG).pack(pady=(12, 1))
-    e_amount = tk.Entry(win3, bg=ENTRY_BG, fg=FG, font=FONT, width=22)
-    e_amount.pack()
-
-    def do_deposit():
-        nonlocal current_balance, user_line_index, lines
-        raw = e_amount.get().strip()
-        if not raw:
-            messagebox.showerror("Error", "Please enter an amount.", parent=win3)
-            return
-        try:
-            amount = float(raw)
-            if amount <= 0:
-                raise ValueError
-        except ValueError:
-            messagebox.showerror("Error", "Enter a valid positive amount.", parent=win3)
-            return
-
-        current_balance += amount
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Update balance in Banker.txt
-        if user_line_index >= 0:
-            parts = lines[user_line_index].strip().split(",")
-            parts[3] = f"{current_balance:.2f}"
-            lines[user_line_index] = ",".join(parts) + "\n"
-            with open("Banker.txt", "w") as f:
-                f.writelines(lines)
-
-        # Log transaction
-        with open("bank.txt", "a") as f:
-            f.write(f"{first} {last} | Deposit: ₱{amount:,.2f} | Balance: ₱{current_balance:,.2f} | {now_str}\n")
-
-        bal_var.set(f"₱ {current_balance:,.2f}")
-        e_amount.delete(0, tk.END)
-        messagebox.showinfo("Success", f"Deposited ₱{amount:,.2f}\nNew Balance: ₱{current_balance:,.2f}", parent=win3)
-
-    def go_back():
-        win3.destroy()
-        open_window2()
-
-    btn_frame = tk.Frame(win3, bg=BG)
-    btn_frame.pack(pady=12)
-    tk.Button(btn_frame, text="  Confirm Deposit  ", command=do_deposit,
-              bg=FG, fg="white", font=FONT, relief="flat", cursor="hand2", padx=6).grid(row=0, column=0, padx=6)
-    tk.Button(btn_frame, text="  Back  ", command=go_back,
-              bg=ENTRY_BG, fg=FG, font=FONT, relief="flat", cursor="hand2", padx=6).grid(row=0, column=1, padx=6)
-
-    win3.mainloop()
+    messagebox.showinfo("Success", f"Account created! Welcome, {first} {last}.")
+    entry_reg_first.delete(0, tk.END)
+    entry_reg_last.delete(0, tk.END)
+    entry_reg_pass.delete(0, tk.END)
+    show_frame(frame_login)
 
 
-# ==================== START ====================
-open_window1()
+# ── LOG IN ─────────────────────────────────────────────────────────────
+def log_in():
+    first = entry_login_first.get().strip().title()
+    last = entry_login_last.get().strip().title()
+    password = entry_login_pass.get()
+
+    if not first or not last or not password:
+        messagebox.showerror("Error", "All fields are required.")
+        return
+
+    try:
+        with open(USERS_FILE, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) >= 3 and parts[0] == first and parts[1] == last and parts[2] == password:
+                    current_user["first"] = first
+                    current_user["last"] = last
+                    entry_login_first.delete(0, tk.END)
+                    entry_login_last.delete(0, tk.END)
+                    entry_login_pass.delete(0, tk.END)
+                    open_dashboard()
+                    return
+    except FileNotFoundError:
+        pass
+
+    messagebox.showerror("Error", "Invalid credentials. Try again.")
+
+
+# ── LOG OUT ────────────────────────────────────────────────────────────
+def log_out():
+    current_user["first"] = ""
+    current_user["last"] = ""
+    show_frame(frame_login)
+
+
+# ── DASHBOARD ──────────────────────────────────────────────────────────
+def open_dashboard():
+    lbl_welcome.config(text=f"Welcome, {current_user['first']} {current_user['last']}!")
+    refresh_balance()
+    show_frame(frame_dashboard)
+
+
+def refresh_balance():
+    bal = get_balance()
+    lbl_balance.config(text=f"Balance: ₱{bal:,.2f}")
+
+
+# ── DEPOSIT ────────────────────────────────────────────────────────────
+def deposit():
+    raw = entry_deposit.get().strip()
+    try:
+        amount = float(raw)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Error", "Enter a valid amount greater than 0.")
+        return
+
+    save_transaction("deposit", amount)
+    entry_deposit.delete(0, tk.END)
+    messagebox.showinfo("Success", f"Deposited ₱{amount:,.2f} successfully.")
+    refresh_balance()
+
+
+# ── WITHDRAW ───────────────────────────────────────────────────────────
+def withdraw():
+    raw = entry_withdraw.get().strip()
+    try:
+        amount = float(raw)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Error", "Enter a valid amount greater than 0.")
+        return
+
+    balance = get_balance()
+    if amount > balance:
+        messagebox.showerror("Error", f"Insufficient balance.\nCurrent balance: ₱{balance:,.2f}")
+        return
+
+    save_transaction("withdrawal", amount)
+    entry_withdraw.delete(0, tk.END)
+    messagebox.showinfo("Success", f"Withdrawn ₱{amount:,.2f} successfully.")
+    refresh_balance()
+
+
+# ── TRANSACTION HISTORY ────────────────────────────────────────────────
+def check_history():
+    first = current_user["first"]
+    last = current_user["last"]
+    records = []
+
+    try:
+        with open(TRANSACTIONS_FILE, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) == 5 and parts[0] == first and parts[1] == last:
+                    records.append(parts)
+    except FileNotFoundError:
+        pass
+
+    win = tk.Toplevel(root)
+    win.title("Transaction History")
+    win.geometry("420x350")
+    win.config(bg="#f5f0e8")
+
+    tk.Label(win, text="Transaction History", font=("Georgia", 14, "bold"), bg="#f5f0e8").pack(pady=12)
+
+    frame = tk.Frame(win, bg="#f5f0e8")
+    frame.pack(fill="both", expand=True, padx=16, pady=4)
+
+    scrollbar = tk.Scrollbar(frame)
+    scrollbar.pack(side="right", fill="y")
+
+    listbox = tk.Listbox(frame, yscrollcommand=scrollbar.set, font=("Courier", 11), bg="#fffdf7", bd=0, relief="flat")
+    listbox.pack(fill="both", expand=True)
+    scrollbar.config(command=listbox.yview)
+
+    if not records:
+        listbox.insert(tk.END, "  No transactions yet.")
+    else:
+        for r in reversed(records):
+            tx_type = r[2].capitalize()
+            amount = float(r[3])
+            date = r[4]
+            sign = "+" if r[2] == "deposit" else "-"
+            listbox.insert(tk.END, f"  {tx_type:12} {sign}₱{amount:>10,.2f}   {date}")
+
+
+# ── WITHDRAWAL RECORDS ─────────────────────────────────────────────────
+def check_withdrawals():
+    first = current_user["first"]
+    last = current_user["last"]
+    records = []
+
+    try:
+        with open(TRANSACTIONS_FILE, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) == 5 and parts[0] == first and parts[1] == last and parts[2] == "withdrawal":
+                    records.append(parts)
+    except FileNotFoundError:
+        pass
+
+    win = tk.Toplevel(root)
+    win.title("Withdrawal Records")
+    win.geometry("420x300")
+    win.config(bg="#f5f0e8")
+
+    tk.Label(win, text="Withdrawal Records", font=("Georgia", 14, "bold"), bg="#f5f0e8").pack(pady=12)
+
+    frame = tk.Frame(win, bg="#f5f0e8")
+    frame.pack(fill="both", expand=True, padx=16, pady=4)
+
+    scrollbar = tk.Scrollbar(frame)
+    scrollbar.pack(side="right", fill="y")
+
+    listbox = tk.Listbox(frame, yscrollcommand=scrollbar.set, font=("Courier", 11), bg="#fffdf7", bd=0, relief="flat")
+    listbox.pack(fill="both", expand=True)
+    scrollbar.config(command=listbox.yview)
+
+    if not records:
+        listbox.insert(tk.END, "  No withdrawals yet.")
+    else:
+        for r in reversed(records):
+            amount = float(r[3])
+            date = r[4]
+            listbox.insert(tk.END, f"  Withdrawal   -₱{amount:>10,.2f}   {date}")
+
+
+# ── ROOT WINDOW ────────────────────────────────────────────────────────
+root = tk.Tk()
+root.title("Bangko Central ng Pilipinas")
+root.geometry("400x480")
+root.config(bg="#f5f0e8")
+root.resizable(False, False)
+
+container = tk.Frame(root, bg="#f5f0e8")
+container.pack(fill="both", expand=True)
+container.grid_rowconfigure(0, weight=1)
+container.grid_columnconfigure(0, weight=1)
+
+# ── FRAMES ─────────────────────────────────────────────────────────────
+frame_login = tk.Frame(container, bg="#f5f0e8")
+frame_register = tk.Frame(container, bg="#f5f0e8")
+frame_dashboard = tk.Frame(container, bg="#f5f0e8")
+
+for frame in (frame_login, frame_register, frame_dashboard):
+    frame.grid(row=0, column=0, sticky="nsew")
+
+FONT_TITLE = ("Palatino Linotype", 16, "bold")
+FONT_LABEL = ("Palatino Linotype", 10)
+FONT_ENTRY = ("Palatino Linotype", 11)
+FONT_BTN   = ("Palatino Linotype", 10, "bold")
+BG = "#f5f0e8"
+CARD = "#fffdf7"
+GOLD = "#c9a84c"
+DARK = "#1a1a2e"
+
+# ── LOGIN FRAME ────────────────────────────────────────────────────────
+tk.Label(frame_login, text="Bangko Central\nng Pilipinas", font=FONT_TITLE, bg=BG, fg=DARK).pack(pady=(30, 4))
+tk.Label(frame_login, text="DIGITAL BANKING PORTAL", font=("Georgia", 8), bg=BG, fg=GOLD).pack()
+tk.Frame(frame_login, height=1, bg="#e0d8c8").pack(fill="x", padx=30, pady=14)
+
+tk.Label(frame_login, text="First Name", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+entry_login_first = tk.Entry(frame_login, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4)
+entry_login_first.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_login, text="Last Name", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+entry_login_last = tk.Entry(frame_login, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4)
+entry_login_last.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_login, text="Password", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+pass_frame_login = tk.Frame(frame_login, bg=BG)
+pass_frame_login.pack(fill="x", padx=40, pady=(2, 16))
+entry_login_pass = tk.Entry(pass_frame_login, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4, show="*")
+entry_login_pass.pack(side="left", fill="x", expand=True)
+tk.Button(pass_frame_login, text="Show", font=("Georgia", 8), bg=BG, bd=0,
+          command=lambda: toggle_password(entry_login_pass, btn_toggle_login)).pack(side="left", padx=4)
+btn_toggle_login = pass_frame_login.winfo_children()[-1]
+
+tk.Button(frame_login, text="Log In", font=FONT_BTN, bg=DARK, fg="white", relief="flat",
+          padx=10, pady=8, command=log_in).pack(fill="x", padx=40, pady=(0, 8))
+tk.Button(frame_login, text="Create Account", font=FONT_BTN, bg=CARD, fg=DARK, relief="flat",
+          padx=10, pady=8, command=lambda: show_frame(frame_register)).pack(fill="x", padx=40)
+
+# ── REGISTER FRAME ─────────────────────────────────────────────────────
+tk.Label(frame_register, text="Create Account", font=FONT_TITLE, bg=BG, fg=DARK).pack(pady=(30, 4))
+tk.Label(frame_register, text="BANGKO CENTRAL NG PILIPINAS", font=("Georgia", 8), bg=BG, fg=GOLD).pack()
+tk.Frame(frame_register, height=1, bg="#e0d8c8").pack(fill="x", padx=30, pady=14)
+
+tk.Label(frame_register, text="First Name", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+entry_reg_first = tk.Entry(frame_register, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4)
+entry_reg_first.pack(fill="x", padx=40, pady=(2, 10))
+
+tk.Label(frame_register, text="Last Name", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+entry_reg_last = tk.Entry(frame_register, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4)
+entry_reg_last.pack(fill="x", padx=40, pady=(2, 10))
+
+
+
+
+
+
+
+
+
+tk.Label(frame_register, text="Password", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=40)
+pass_frame_reg = tk.Frame(frame_register, bg=BG)
+pass_frame_reg.pack(fill="x", padx=40, pady=(2, 16))
+entry_reg_pass = tk.Entry(pass_frame_reg, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4, show="*")
+entry_reg_pass.pack(side="left", fill="x", expand=True)
+tk.Button(pass_frame_reg, text="Show", font=("Georgia", 8), bg=BG, bd=0,
+          command=lambda: toggle_password(entry_reg_pass, btn_toggle_reg)).pack(side="left", padx=4)
+btn_toggle_reg = pass_frame_reg.winfo_children()[-1]
+
+tk.Button(frame_register, text="Register", font=FONT_BTN, bg=DARK, fg="white", relief="flat",
+          padx=10, pady=8, command=register).pack(fill="x", padx=40, pady=(0, 8))
+tk.Button(frame_register, text="Back to Login", font=FONT_BTN, bg=CARD, fg=DARK, relief="flat",
+          padx=10, pady=8, command=lambda: show_frame(frame_login)).pack(fill="x", padx=40)
+
+# ── DASHBOARD FRAME ────────────────────────────────────────────────────
+dash_top = tk.Frame(frame_dashboard, bg=DARK)
+dash_top.pack(fill="x")
+
+lbl_welcome = tk.Label(dash_top, text="Welcome!", font=("Georgia", 13, "bold"), bg=DARK, fg="white")
+lbl_welcome.pack(side="left", padx=20, pady=16)
+
+tk.Button(dash_top, text="Log Out", font=("Georgia", 9), bg=DARK, fg=GOLD, bd=0, relief="flat",
+          command=log_out).pack(side="right", padx=20)
+
+lbl_balance = tk.Label(frame_dashboard, text="Balance: ₱0.00", font=("Georgia", 18, "bold"), bg=BG, fg=DARK)
+lbl_balance.pack(pady=20)
+
+tk.Frame(frame_dashboard, height=1, bg="#e0d8c8").pack(fill="x", padx=20, pady=4)
+
+# deposit section
+tk.Label(frame_dashboard, text="Deposit", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=30)
+dep_row = tk.Frame(frame_dashboard, bg=BG)
+dep_row.pack(fill="x", padx=30, pady=(2, 10))
+entry_deposit = tk.Entry(dep_row, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4)
+entry_deposit.pack(side="left", fill="x", expand=True)
+tk.Button(dep_row, text="Deposit", font=FONT_BTN, bg=GOLD, fg="white", relief="flat",
+          padx=10, command=deposit).pack(side="left", padx=(6, 0))
+
+# withdraw section
+tk.Label(frame_dashboard, text="Withdraw", font=FONT_LABEL, bg=BG).pack(anchor="w", padx=30)
+wit_row = tk.Frame(frame_dashboard, bg=BG)
+wit_row.pack(fill="x", padx=30, pady=(2, 16))
+entry_withdraw = tk.Entry(wit_row, font=FONT_ENTRY, bg=CARD, relief="flat", bd=4)
+entry_withdraw.pack(side="left", fill="x", expand=True)
+tk.Button(wit_row, text="Withdraw", font=FONT_BTN, bg="#c0392b", fg="white", relief="flat",
+          padx=10, command=withdraw).pack(side="left", padx=(6, 0))
+
+tk.Frame(frame_dashboard, height=1, bg="#e0d8c8").pack(fill="x", padx=20, pady=4)
+
+btn_row = tk.Frame(frame_dashboard, bg=BG)
+btn_row.pack(fill="x", padx=30, pady=12)
+tk.Button(btn_row, text="Transaction History", font=FONT_BTN, bg=CARD, fg=DARK, relief="flat",
+          padx=8, pady=8, command=check_history).pack(side="left", expand=True, fill="x", padx=(0, 6))
+tk.Button(btn_row, text="Withdrawal Records", font=FONT_BTN, bg=CARD, fg=DARK, relief="flat",
+          padx=8, pady=8, command=check_withdrawals).pack(side="left", expand=True, fill="x")
+
+# ── START ──────────────────────────────────────────────────────────────
+show_frame(frame_login)
+root.mainloop()
