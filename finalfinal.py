@@ -301,3 +301,22 @@ dash_top.pack(fill="x")
 lbl_welcome = tk.Label(dash_top, text = f"Welcome, {currentUser['first']} {currentUser['last']}!", font=FONT_TITLE, bg=blackCherry, fg=BG)
 lbl_welcome.pack(side = "left", padx=20, pady=16)
 
+tk.Button(dash_top, text="Log Out", font=FONT_BTN, bg=blackCherry, fg=BG, relief="flat", padx=10, pady=8, command=logOut).pack(side="right", padx=20)
+lbl_balance = 
+
+
+
+
+
+
+
+
+
+
+
+
+
+show_frame(frame_login)
+root.mainloop()
+
+
