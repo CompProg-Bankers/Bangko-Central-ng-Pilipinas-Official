@@ -4,30 +4,30 @@ from datetime import datetime
 import getpass
 
 # FILES ========================================
-
-userFile = "bankusers.txt"
-tranSactions = "Transactions.txt"
+#creates the text files if they dont exist
+userFile = "bankusers.txt" #store registered accounts
+tranSactions = "Transactions.txt" #store transaction records (deposit/withdrawal)
 
 try:
     open(userFile, "x").close()
 except FileExistsError:
-    pass
+    pass # no need to create file if already existing
 
 try:
     open(tranSactions, "x").close()
 except FileExistsError:
-    pass
+    pass # no need to create file if already existing
 
 # PALETTE FOR GUI ========================================
-BG          = "#640D14"
-BG2         = "#AD2831"
-PEARL       = "#F3E6BD"
-GOLD        = "#D8973C"
-BTN_LIGHT   = "#F3E6BD"
-BTN_DARK    = "#AD2831"
-FG_DARK     = "#640D14"
+BG          = "#640D14" #background color mainly
+BG2         = "#AD2831" #entry fields and frames
+PEARL       = "#F3E6BD" #text color
+GOLD        = "#D8973C" # titles and accents
+BTN_LIGHT   = "#F3E6BD" #light button bg
+BTN_DARK    = "#AD2831" #dark button bg
+FG_DARK     = "#640D14" # dark text for light buttons
 
-FONT        = "Palatino Linotype"
+FONT        = "Palatino Linotype" #consistent font for all text in the GUI
 FONT_TITLE  = (FONT, 20, "bold")
 FONT_SUB    = (FONT, 10, "italic")
 FONT_LABEL  = (FONT, 11, "bold")
@@ -36,14 +36,14 @@ FONT_BTN_SM = (FONT, 10, "bold")
 FONT_ENTRY  = (FONT, 11)
 
 # =GOLBAL VARIABLES ========================================
-
+# Tracks the currently logged-in user throughout the session
 currentUser = {"first": "", "last": ""}
 
 # IMPORTANT PARTS ======================================================
 def now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def valPass(password):
+def valPass(password): # Validates password, must contain at least 8 characters, 1 uppercase letter, 1 number, and 1 special character
     if len(password) < 8:
         return "Password must be at least 8 characters."
     if not any(c.isupper() for c in password):
@@ -52,20 +52,16 @@ def valPass(password):
         return "Password must contain at least one special character."
     if not any(c.isdigit() for c in password):
         return "Password must have atleast one number."
-    return None
-
-def saveTransac(tranSactions, amount):
-    with open(tranSactions, "a") as file: 
-        file.write(f"{currentUser['first']},{currentUser['last']},: {tranSactions},{amount},{now()}\n")
-
+    return None #means all password passes all checks
 
 def togglePass(entry, btn):
+    
     # Works for both normal and readonly entries
     current_show = entry.cget("show")
     state = entry.cget("state")
     if state == "readonly":
         entry.config(state="normal")
-        entry.config(show="" if current_show == "*" else "*")
+        entry.config(show="" if current_show == "*" else "*") #this is for showing/hiding password for privacy
         btn.config(text="Hide" if current_show == "*" else "Show")
         entry.config(state="readonly")
     else:
@@ -73,27 +69,28 @@ def togglePass(entry, btn):
         btn.config(text="Hide" if current_show == "*" else "Show")
 
 
-def show_frame(frame):
+def show_frame(frame): #since we use multiple windows/frames, this function will help us navigate through them by raising infront the one we are currently using
     frame.tkraise()
 
 def divider(parent):
-    tk.Frame(parent, bg=GOLD, height=1).pack(fill="x", padx=30, pady=(4, 12))
+    tk.Frame(parent, bg=GOLD, height=1).pack(fill="x", padx=30, pady=(4, 12)) #Creates a thin gold horizontal line used as a separator.
 
-def make_entry(parent, show=""):
+def make_entry(parent, show=""): #Creates a styled text input box with your color theme already applied.
     e = tk.Entry(parent, font=FONT_ENTRY, bg=BG2, fg=PEARL,
                 insertbackground=PEARL, relief="flat",
                 highlightthickness=0, highlightbackground=GOLD,
                 highlightcolor=GOLD, show=show)
     return e
 
-def header(parent, title):
+def header(parent, title): #Creates the title + gold divider line combo that appears at the top of every screen
     tk.Label(parent, text=title, font=FONT_TITLE,
             bg=BG, fg=GOLD, justify="center").pack(pady=(28, 4))
     divider(parent)
 
 
 # TO CLEAR FOR ALL WINDOWS ================================
-def clear_register():
+def clear_register(): 
+    #clears all fields in the regis screen
     entry_reg_first.delete(0, tk.END)
     entry_reg_last.delete(0, tk.END)
     entry_reg_pass.delete(0, tk.END)
@@ -101,6 +98,7 @@ def clear_register():
     btn_show_reg.config(text="Show")
 
 def clear_login():
+    # clears all fields in the login screen
     entry_login_first.delete(0, tk.END)
     entry_login_last.delete(0, tk.END)
     entry_login_pass.delete(0, tk.END)
@@ -108,12 +106,15 @@ def clear_login():
     btn_show_login.config(text="Show")
 
 def clear_deposit():
+    #clears deposit amount field
     entry_deposit.delete(0, tk.END)
 
 def clear_withdraw():
+    #clears withdraw amount field
     entry_withdraw.delete(0, tk.END)
 
 def clear_delete():
+    # clears password field and hides coonfirmation password in delete account screen
     entry_del_pass.delete(0, tk.END)
     confirm_frame.pack_forget()
 
@@ -121,7 +122,7 @@ def clear_delete():
 # navigation functions =======================================================================
 
 def go_login():
-    clear_login()
+    clear_login() #clear fields b4 showing
     show_frame(frame_login)
 
 def go_register():
@@ -140,7 +141,7 @@ def go_withdraw():
     show_frame(frame_withdraw)
 
 def go_profile():
-    openProfile()
+    openProfile() #loads current data before showing
 
 def go_delete():
     clear_delete()
@@ -150,16 +151,18 @@ def go_delete():
 
 #REGISTER =======================================================================
 
-def register(): #create acc niiiiii
+def register(): #handles account creation
     
     firstName = entry_reg_first.get().strip()
     lastName = entry_reg_last.get().strip()
     passWord = entry_reg_pass.get().strip()
 
+    #cehck if all fields are filled
     if not firstName or not lastName or not passWord:
         messagebox.showerror("Error", "All fields are required.")
         return
-    # check if NA REGISTER NA
+    
+    # check if user already has an account
     try:
         with open(userFile, "r") as file:
             for line in file:
@@ -171,11 +174,13 @@ def register(): #create acc niiiiii
     except FileNotFoundError:
         pass
 
+        #validate pass
     err = valPass(passWord) #match ba ang password?
     if err:
         messagebox.showerror("Invalid Password", err)
         return
 
+    #save new user to file
     with open(userFile, "a") as file: #save the user info in the txt file
         file.write(f"{firstName},{lastName},{passWord}\n")
     
@@ -186,10 +191,12 @@ def register(): #create acc niiiiii
 
 # LOG IN =======================================================================
 def logIn():
+    #handles user login by checking the credentials against the stored accounts in the text file
     firstName = entry_login_first.get().strip().title()
     lastName = entry_login_last.get().strip().title()
     password = entry_login_pass.get().strip()
 
+#check if all fields are filled
     if not firstName or not lastName or not password:
         messagebox.showerror("Error", "All fields are required.")
         return
@@ -198,7 +205,7 @@ def logIn():
         with open(userFile, "r") as file:
             for line in file:
                 parts = line.strip().split(",")
-                if len(parts) >= 3 and parts[0] == firstName and parts[1] == lastName:
+                if len(parts) >= 3 and parts[0] == firstName and parts[1] == lastName: #if name matched, check password
                     if parts[2] == password:
                         currentUser["first"] = firstName
                         currentUser["last"] = lastName
@@ -211,54 +218,60 @@ def logIn():
     except FileNotFoundError:
         pass
 
+        #if no match, show error
     messagebox.showerror("Error", "You don't have an account.")
-   
 
 #LOG OUT ===============================================
 
 def logOut():
+    # clears the current user session and returns log in screen
     currentUser["first"] = ""
     currentUser["last"] = ""
     go_login()
     messagebox.showinfo("Logged Out", "Log Out successful.")
-   
+
 
 # DASHBOARD OPEN =========================
 def openDashboard():
+    #welcomes user by name and shows dashboard
     lbl_welcome.config(text=f"Welcome, {currentUser['first']} {currentUser['last']}!")
     show_frame(frame_dashboard)
 
 # DEPOSIT =======================================================================
 def deposit():
+    # handles depositing money into user's account
     amount_str = entry_deposit.get().strip().replace(",", "")
     try:
         amount = float(amount_str)
         if amount <= 0:
-            raise ValueError
+            raise ValueError #rejects zero or negatives
     except ValueError:
         messagebox.showerror("Error", "Please enter a valid positive number.")
         return
 
-    saveTransac("deposit", amount)
+    saveTransac("deposit", amount) #save to transactions file
     clear_deposit()
     messagebox.showinfo("Success", f"Deposited ₱{amount:,.2f} successfully.")
 
 # WITHDRAW MONEY========================================================================
 def withdraw():
+    #withdrawing money from users account
     amount_str = entry_withdraw.get().strip().replace(",", "")
     try:
         amount = float(amount_str)
         if amount <= 0:
-            raise ValueError
+            raise ValueError #rejects zero or negatives
     except ValueError:
         messagebox.showerror("Error", "Please enter a valid positive number.")
         return
 
+# prevent withdrawal if balance is not enough
     current_balance = getBal()
     if amount > current_balance:
         messagebox.showerror("Error", "Insufficient funds.")
         return
     
+    #ask user to confirm before proceessing
     if messagebox.askyesno("Confirm", f"Withdraw ₱{amount:,.2f}?"):
         saveTransac("withdrawal", amount)
         clear_withdraw()
@@ -266,14 +279,18 @@ def withdraw():
 
 
 # WITHDRAWAL RECORD =======================================================================
+
 def withdrawalRecord():
+    #loads and dislays withdrawal records in the withdrawal record screen, if no records found, shows a message instead
     for w in frame_wr_list.winfo_children():
-        w.destroy()
+        w.destroy() #clear previous records before loading
+
+    #filter ONLY WITHDRAWAL records from all transaction records
     records = [(t, a, d) for t, a, d in getTransactions() if t == "withdrawal"]
-    if not records:
+    if not records: #if walay withdrawal records, show message
         tk.Label(frame_wr_list, text="No withdrawal records found.",
                 font=FONT_LABEL, bg=BG2, fg=PEARL).pack(pady=10)
-    else:
+    else: #display each withdrawal record as a row with amount and date
         for _, amt, date in records:
             row = tk.Frame(frame_wr_list, bg=BG2)
             row.pack(fill="x", padx=6, pady=2)
@@ -282,14 +299,19 @@ def withdrawalRecord():
             tk.Label(row, text=date, font=FONT_ENTRY,
                     bg=BG2, fg=GOLD, anchor="e").pack(side="right", padx=6)
 
-def loadTxRecords():
+# TRANSACTION RECORD =======================================================================
+
+def loadTxRecords(): #loads and displays all transactions (both deposit and withdrawal)
     for w in frame_tx_list.winfo_children():
-        w.destroy()
+        w.destroy() #clear previous records before loading
+
     records = getTransactions()
+    
     if not records:
         tk.Label(frame_tx_list, text="No transaction records found.",
                 font=FONT_LABEL, bg=BG2, fg=PEARL).pack(pady=10)
-    else:
+    
+    else: #display each transaction record as a row with type, amount, and date. Deposits in green, withdrawals in red
         for tx, amt, date in records:
             row = tk.Frame(frame_tx_list, bg=BG2)
             row.pack(fill="x", padx=6, pady=2)
@@ -302,7 +324,7 @@ def loadTxRecords():
                     bg=BG2, fg=GOLD, anchor="e").pack(side="right", padx=6)
 
 # USER PROFILE ========================================================
-def openProfile():
+def openProfile(): # loads current user info and password
     lbl_prof_first.config(text=currentUser["first"])
     lbl_prof_last.config(text=currentUser["last"])
 
@@ -311,6 +333,8 @@ def openProfile():
     entry_prof_pass.delete(0, tk.END)
     entry_prof_pass.config(show="*")
     btn_show_prof.config(text="Show")
+
+    #find and load the user's password from the userFile
     try:
         with open(userFile, "r") as f:
             for line in f:
@@ -324,8 +348,9 @@ def openProfile():
         pass
     entry_prof_pass.config(state="readonly")
     show_frame(frame_profile)
+
 # GET BALANCE =======================================================================
-def getBal():
+def getBal(): # calculates current alance by summing deposits and subtracting withdrwals
     first = currentUser["first"]
     last = currentUser["last"]
     balance = 0.0
@@ -343,18 +368,22 @@ def getBal():
                         elif tx_type == "withdrawal":
                             balance -= amount
                     except ValueError:
-                        continue
+                        continue 
     except FileNotFoundError:
         pass
     return balance
 
-def saveTransac(tx_type, amount):
+# SAVE TRANSACTION =======================================================================
+
+def saveTransac(tx_type, amount): #SAVE TRANSACTION TO FILE 
+    # format: firstName, lastName, transactionType, amount, dateTime 
     with open(tranSactions, "a") as f:
         f.write(f"{currentUser['first']},{currentUser['last']},{tx_type},{amount},{now()}\n")
 
 
 # TRANSACTION RECORDS =======================================================================
 def getTransactions():
+    #reads and returnsall transactions for the current user from the file
     first, last = currentUser["first"], currentUser["last"]
     records = []
     try:
@@ -367,46 +396,25 @@ def getTransactions():
         pass
     return records
 
+
 #DELETE ACCOUNT =======================================================================
-def deleteAccount():
-    if not currentUser["first"] or not currentUser["last"]:
-        messagebox.showinfo("Info", "No user is currently logged in.")
-        return
-
-    if messagebox.askyesno("Confirm", "Are you sure you want to delete your account? This action cannot be undone."):
-        try:
-            with open(userFile, "r") as file:
-                lines = file.readlines()
-            with open(userFile, "w") as file:
-                for line in lines:
-                    parts = line.strip().split(",")
-                    if not (parts[0] == currentUser["first"] and parts[1] == currentUser["last"]):
-                        file.write(line)
-            messagebox.showinfo("Info", "Your account has been deleted.")
-            logOut()
-        except FileNotFoundError:
-            messagebox.showinfo("Info", "No user data found.")
-
-#SIGN OUT =======================================================================
-def signOut():
-    if currentUser["first"] and currentUser["last"]:
-        messagebox.showinfo("Info", f"Goodbye, {currentUser['first']} {currentUser['last']}!")
-        logOut()
-    else:
-        messagebox.showinfo("Info", "No user is currently logged in.")
 
 def deleteAccount():
+    #delete current user profile
     confirm_pass = entry_del_pass.get().strip()
     first, last  = currentUser["first"], currentUser["last"]
 
     matched = False
     lines   = []
+
+    # read all users 
     try:
         with open(userFile, "r") as f:
             lines = f.readlines()
     except FileNotFoundError:
         pass
 
+    #keeps all users exept the one being deleted
     new_lines = []
     for line in lines:
         parts = line.strip().split(",")
@@ -416,10 +424,12 @@ def deleteAccount():
         else:
             new_lines.append(line)
 
+    #stops if password didn't match the user record
     if not matched:
         messagebox.showerror("Error", "Incorrect password.")
         return
 
+    # also deletes all transactions of deleted user
     with open(userFile, "w") as f:
         f.writelines(new_lines)
 
@@ -434,6 +444,7 @@ def deleteAccount():
     except FileNotFoundError:
         pass
 
+        #clear session and return to login
     currentUser["first"] = ""
     currentUser["last"]  = ""
     clear_delete()
