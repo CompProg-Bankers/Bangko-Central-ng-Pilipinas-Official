@@ -132,7 +132,7 @@ def logIn():
         with open(userFile, "r") as file:
             for line in file:
                 parts = line.strip().split(",")
-                if len(parts) >= 3 and parts[0] == firstName and parts [1] == last and parts[2] == password::
+                if len(parts) >= 3 and parts[0] == firstName and parts [1] == lastName and parts[2] == password:
                     currentUser["first"] = firstName
                     currentUser["last"] = lastName
                     entry_login_first.delete(0, tk.END)
