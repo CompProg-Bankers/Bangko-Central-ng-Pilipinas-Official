@@ -574,7 +574,7 @@ tk.Button(frame_register, text="BACK TO LOG IN", font=FONT_BTN,
 # ══════════════════════════════════════════════════════════════════════════════
 # FRAME: DASHBOARD
 # ══════════════════════════════════════════════════════════════════════════════
-frame_dashboard = make_frame()
+frame_dashboard = make_frame() #WINDOW FOR DASHBOARD, FROM HERE USER CAN NAVIGATE TO OTHER SCREENS
 
 tk.Button(frame_dashboard, text="USER PROFILE", font=FONT_BTN_SM,
         bg=BTN_LIGHT, fg=FG_DARK, relief="flat",
@@ -592,18 +592,18 @@ tk.Label(frame_dashboard, text="What would you like to do?",
 # ── Dashboard menu buttons ───────────────────────────────────────────────────
 tk.Button(frame_dashboard, text="DEPOSIT", font=FONT_BTN,
         bg=BTN_LIGHT, fg=FG_DARK, relief="flat",
-        activebackground=GOLD, cursor="hand2",
+        activebackground=GOLD, cursor="hand2", #ACTEIVE BACKGROUND KAY ANG BG SA BUTTON PAG I HOVER OVER ANG CURSOR
         command=go_deposit).pack(fill="x", padx=30, pady=(0, 8), ipady=8)
 
 tk.Button(frame_dashboard, text="WITHDRAW", font=FONT_BTN,
         bg=BTN_LIGHT, fg=FG_DARK, relief="flat",
-        activebackground=GOLD, cursor="hand2",
+        activebackground=GOLD, cursor="hand2", #ACTEIVE BACKGROUND KAY ANG BG SA BUTTON PAG I HOVER OVER ANG CURSOR
         command=go_withdraw).pack(fill="x", padx=30, pady=(0, 8), ipady=8)
 
 tk.Button(frame_dashboard, text="CHECK BALANCE", font=FONT_BTN,
         bg=BTN_LIGHT, fg=FG_DARK, relief="flat",
-        activebackground=GOLD, cursor="hand2",
-        command=lambda: show_balance_frame()).pack(fill="x", padx=30, pady=(0, 8), ipady=8)
+        activebackground=GOLD, cursor="hand2", #ACTEIVE BACKGROUND KAY ANG BG SA BUTTON PAG I HOVER OVER ANG CURSOR
+        command=lambda: show_balance_frame()).pack(fill="x", padx=30, pady=(0, 8), ipady=8) #internal padding, inside widget
 
 tk.Button(frame_dashboard, text="CHECK WITHDRAWAL RECORDS", font=FONT_BTN,
         bg=BTN_LIGHT, fg=FG_DARK, relief="flat",
