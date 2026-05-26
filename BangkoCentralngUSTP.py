@@ -44,7 +44,7 @@ def now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def valPass(password): # Validates password, must contain at least 8 characters, 1 uppercase letter, 1 number, and 1 special character
-    if len(password) < 8:
+    if len(password) <= 8:
         return "Password must be at least 8 characters."
     if not any(c.isupper() for c in password):
         return "Password must contain at least one uppercase letter."
@@ -153,10 +153,21 @@ def go_delete():
 
 def register(): #handles account creation
     
+
     firstName = entry_reg_first.get().strip()
     lastName = entry_reg_last.get().strip()
     passWord = entry_reg_pass.get().strip()
 
+
+    #check if not numbers or symbols
+    if not firstName.replace(" ","").isalpha():
+        messagebox.showerror("Error", "First name must not include characters or numbers")
+        return
+    
+    if not lastName.replace(" ","").isalpha():
+        messagebox.showerror("Error", "Last name must not include characters or numbers")
+        return
+    
     #cehck if all fields are filled
     if not firstName or not lastName or not passWord:
         messagebox.showerror("Error", "All fields are required.")
@@ -168,7 +179,7 @@ def register(): #handles account creation
             for line in file:
                 parts = line.strip().split(",")
                 if len(parts) >= 2:
-                    if parts[0] == firstName and parts[1] == lastName:
+                    if parts[0] == firstName and parts[1] == lastName and parts[2] == passWord:
                         messagebox.showinfo("Info", "You already have an account. Please proceed to log in.")
                         return
     except FileNotFoundError:
@@ -180,13 +191,14 @@ def register(): #handles account creation
         messagebox.showerror("Invalid Password", err)
         return
 
+    else:
     #save new user to file
-    with open(userFile, "a") as file: #save the user info in the txt file
-        file.write(f"{firstName},{lastName},{passWord}\n")
-    
-    messagebox.showinfo("Info", f"Registration successful. Welcome, {firstName} {lastName}!")
-    clear_register()
-    go_login()
+        with open(userFile, "a") as file: #save the user info in the txt file
+            file.write(f"{firstName},{lastName},{passWord}\n")
+        
+        messagebox.showinfo("Info", f"Registration successful. Welcome, {firstName} {lastName}!")
+        clear_register()
+        go_login()
 
 
 # LOG IN =======================================================================

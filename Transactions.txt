@@ -1,2 +1,6 @@
 Auvrey Gel,Patindol,deposit,10000.0,2026-05-26 00:22:44
 Casasandra,Ebcas,deposit,80000.0,2026-05-26 00:40:29
+Auvrey Gel,Patindol,withdrawal,5000.0,2026-05-26 10:06:34
+Auvrey Gel,Patindol,deposit,15000.0,2026-05-26 10:06:43
+Auvrey Gel,Patindol,deposit,10000.0,2026-05-26 16:43:52
+Auvrey Gel,Patindol,withdrawal,10000.0,2026-05-26 16:44:35
